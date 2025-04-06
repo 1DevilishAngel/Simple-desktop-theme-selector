@@ -61,8 +61,8 @@ static void RunConfig (GtkWidget *Widget) {
 
 static void activate (GtkApplication* app, gpointer user_data)
 {
-  std::string Name;
-  GtkWidget *Base;
+  std::string name;
+  GtkWidget *base;
   GtkWidget *button;
   GtkWidget *ButtonIcon;
   GtkWidget *ButtonContainer;
@@ -70,43 +70,45 @@ static void activate (GtkApplication* app, gpointer user_data)
   gtk_window_set_title (GTK_WINDOW (window), "Window");
   gtk_window_set_default_size (GTK_WINDOW (window), 200, 200);
   gtk_window_present (GTK_WINDOW (window));
-  Base = gtk_grid_new();
-  gtk_window_set_child (GTK_WINDOW (window), Base); 
+  base = gtk_grid_new();
+  gtk_window_set_child (GTK_WINDOW (window), base); 
   int I = 0;
   button = gtk_button_new_with_label("Restore Default");
   g_signal_connect (button, "clicked", G_CALLBACK (RestoreDefaults), NULL);
   g_signal_connect(button, "clicked", G_CALLBACK (gtk_window_destroy), window);
-  gtk_grid_attach (GTK_GRID (Base), button, 0, 0, 2, 1);
+  gtk_grid_attach (GTK_GRID (base), button, 0, 0, 2, 1);
   I++;
   std::string BaseDirectory = (std::string)getpwuid(getuid())->pw_dir + "/.local/share/SDTS";
   for (const auto& entry : std::filesystem::directory_iterator(BaseDirectory)) {
     const auto filenameStr = entry.path().filename().string();
     std::string IconPath = BaseDirectory + "/" + filenameStr + "/Icon.png";
-    Name = filenameStr;
-    button = gtk_button_new_with_label(Name.c_str());
+    name = filenameStr;
+    button = gtk_button_new_with_label(name.c_str());
     if (std::filesystem::exists(IconPath)) {
       ButtonIcon = gtk_image_new_from_file(IconPath.c_str());
       ButtonContainer = gtk_grid_new();
       gtk_grid_attach(GTK_GRID(ButtonContainer), ButtonIcon, 0, 0, 4, 4);
-      gtk_grid_attach(GTK_GRID(ButtonContainer), gtk_label_new(Name.c_str()), 12, 0, 2, 2);
+      gtk_grid_attach(GTK_GRID(ButtonContainer), gtk_label_new(name.c_str()), 12, 0, 2, 2);
       gtk_button_set_child(GTK_BUTTON(button), ButtonContainer);
     }
-    gtk_widget_set_name(button, Name.c_str());
+    gtk_widget_set_name(button, name.c_str());
     //gpointer* pointer = &filenameStr; 
     g_signal_connect (button, "clicked", G_CALLBACK (RunConfig), NULL);
-    gtk_grid_attach (GTK_GRID (Base), button, 0, I, 2, 1);
+    gtk_grid_attach (GTK_GRID (base), button, 0, I, 2, 1);
     I++;
   }
 
 }
 
 int
-main (int    argc,
-      char **argv)
+main (int argc, char **argv)
 {
   GtkApplication *app;
   int status;
-
+  std::string BaseDirectory = (std::string)getpwuid(getuid())->pw_dir + "/.local/share/SDTS";
+  if (!std::filesystem::exists(BaseDirectory)) {
+      std::filesystem::create_directory(BaseDirectory);
+  }
   app = gtk_application_new ("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
   g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
   status = g_application_run (G_APPLICATION (app), argc, argv);
