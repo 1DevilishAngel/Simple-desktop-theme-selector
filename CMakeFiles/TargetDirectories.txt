@@ -1,3 +1,0 @@
-/home/river/build/Simple-desktop-theme-selector/CMakeFiles/SDTS.dir
-/home/river/build/Simple-desktop-theme-selector/CMakeFiles/edit_cache.dir
-/home/river/build/Simple-desktop-theme-selector/CMakeFiles/rebuild_cache.dir
