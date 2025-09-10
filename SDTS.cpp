@@ -37,9 +37,10 @@ static void RestoreDefaults() {
 }
 
 
-static void RunConfig (GtkWidget *Widget) {
+
+static void RunConfig (std::string DirName) {
   std::string BaseDirectory = (std::string)getpwuid(getuid())->pw_dir + "/.local/share/SDTS";
-  std::string ThemeDirectory = BaseDirectory + "/" + gtk_widget_get_name(Widget);
+  std::string ThemeDirectory = BaseDirectory + "/" + DirName;
   std::string LinksDirectory = ThemeDirectory + "/Directories";
   RestoreDefaults();
   for (auto const& dir_entry : std::filesystem::recursive_directory_iterator(LinksDirectory)) {
@@ -57,6 +58,10 @@ static void RunConfig (GtkWidget *Widget) {
   std::string Command = "sh " + ThemeDirectory + "/Init.sh";
   system(Command.c_str());
   gtk_window_destroy(GTK_WINDOW(window));
+}
+
+static void RunConfigPasser (GtkWidget *Widget) {
+  RunConfig(gtk_widget_get_name(Widget));
 }
 
 static void activate (GtkApplication* app, gpointer user_data)
@@ -93,7 +98,7 @@ static void activate (GtkApplication* app, gpointer user_data)
     }
     gtk_widget_set_name(button, name.c_str());
     //gpointer* pointer = &filenameStr; 
-    g_signal_connect (button, "clicked", G_CALLBACK (RunConfig), NULL);
+    g_signal_connect (button, "clicked", G_CALLBACK (RunConfigPasser), NULL);
     gtk_grid_attach (GTK_GRID (base), button, 0, I, 2, 1);
     I++;
   }
@@ -109,10 +114,23 @@ main (int argc, char **argv)
   if (!std::filesystem::exists(BaseDirectory)) {
       std::filesystem::create_directory(BaseDirectory);
   }
-  app = gtk_application_new ("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
-  g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
-  status = g_application_run (G_APPLICATION (app), argc, argv);
-  g_object_unref (app);
+  if(argc != 1) {
+    if(argv[1] == "default") {
+      RestoreDefaults();
+      return 0;
+    }
+    else {
+        RunConfig(argv[1]);
+      return 0;
+    }
+  }
+  else {
+      app = gtk_application_new ("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
+      g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+      status = g_application_run (G_APPLICATION (app), argc, argv);
+      g_object_unref (app);
+  }
+
 
   return status;
 }
